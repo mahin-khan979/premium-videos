@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>স্বাধীন IPTV | FIFA World Cup লাইভ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.8/dist/hls.min.js"></script>
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        body { background: #f1f5f9; color: #1e293b; }
+        
+        .glass-card { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(148, 163, 184, 0.2); border-radius: 1.25rem; transition: all 0.3s ease; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05); }
+        .glass-card:hover { border-color: rgba(56, 189, 248, 0.6); transform: translateY(-3px); }
+        
+        .channel-card { cursor: pointer; transition: all 0.2s; background: rgba(255, 255, 255, 0.9); }
+        .channel-card:hover { transform: scale(0.98); }
+        
+        .gradient-text { background: linear-gradient(135deg, #0284c7, #4f46e5); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .live-badge { background: #ef4444; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 0.7; } 50% { opacity: 1; } 100% { opacity: 0.7; } }
+        
+        .fifa-card { border: 2px solid #eab308; background: linear-gradient(135deg, #1e293b, #0f172a); }
+        .fifa-badge { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: #1e293b; }
+        
+        .top-menu-btn { flex: 1; text-align: center; font-weight: 700; font-size: 0.95rem; transition: all 0.3s ease; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: 1rem; }
+        .top-menu-btn.active { background: #0284c7; color: white; box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3); }
+        .top-menu-btn:not(.active) { color: #64748b; background: transparent; }
+        .top-menu-btn:not(.active):hover { background: #e2e8f0; color: #0f172a; }
+        
+        .auth-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(8px);
+            z-index: 20000; display: flex; align-items: center; justify-content: center;
+        }
+        .auth-card {
+            background: white;
+            border-radius: 2rem;
+            max-width: 420px; width: 90%;
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+            color: #1e293b;
+        }
+        .auth-input { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 0.75rem; padding: 0.75rem 1rem; color: #0f172a; width: 100%; outline: none; }
+        .auth-input:focus { border-color: #38bdf8; background: white; }
+        
+        /* ============= মিডিলে সেন্টার নোটিফিকেশন কার্ড ============= */
+        .center-notification-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
+            z-index: 30000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .center-notification-card {
+            max-width: 450px;
+            width: 90%;
+            background: white;
+            border-radius: 2rem;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: scaleIn 0.3s cubic-bezier(0.34, 1.2, 0.64, 1);
+        }
+        
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        .center-notif-suspended {
+            border-top: 8px solid #ef4444;
+        }
+        
+        .center-notif-payment {
+            border-top: 8px solid #10b981;
+        }
+        
+        .center-notif-warning {
+            border-top: 8px solid #f59e0b;
+        }
+        
+        .center-notif-header {
+            padding: 1.5rem 1.5rem 0.5rem 1.5rem;
+            text-align: center;
+        }
+        
+        .center-notif-icon {
+            width: 70px;
+            height: 70px;
+            margin: 0 auto 1rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+        }
+        
+        .center-notif-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+        
+        .center-notif-body {
+            padding: 0.5rem 1.5rem 1rem;
+            text-align: center;
+            color: #475569;
+            line-height: 1.6;
+            font-size: 1rem;
+        }
+        
+        .center-notif-footer {
+            padding: 1rem 1.5rem 1.5rem;
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+        
+        .center-notif-btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 3rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            font-size: 0.9rem;
+        }
+        
+        .center-notif-btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .center-notif-btn-primary:hover {
+            background: #2563eb;
+        }
+        
+        .center-notif-btn-secondary {
+            background: #f1f5f9;
+            color: #475569;
+        }
+        
+        .center-notif-btn-secondary:hover {
+            background: #e2e8f0;
+        }
+        
+        /* সাসপেন্ডেড স্টাইল */
+        .suspended-channel { position: relative; opacity: 0.6; cursor: not-allowed; }
+        .suspended-channel::after {
+            content: '\f023'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 30px; color: rgba(0,0,0,0.5); background: rgba(255,255,255,0.7);
+            width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+            border-radius: 1rem; pointer-events: none;
+        }
+        
+        .suspended-badge {
+            display: inline-block;
+            background: #ef4444;
+            color: white;
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 20px;
+            margin-left: 8px;
+        }
+        
+        /* পেমেন্ট ব্যানার */
+        .payment-banner {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            padding: 10px;
+            border-radius: 1rem;
+            margin-top: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- লোডিং স্ক্রিন -->
+    <div id="loadingScreen" class="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-slate-900 text-white transition-opacity duration-500">
+        <div class="relative w-24 h-24 mx-auto mb-6">
+            <div class="absolute inset-0 rounded-full border-4 border-t-transparent border-blue-500 animate-spin"></div>
+            <i class="fas fa-futbol absolute inset-0 flex items-center justify-center text-3xl text-blue-400"></i>
+        </div>
+        <h1 class="text-3xl font-black"><span class="gradient-text">স্বাধীন</span> <span>IPTV</span></h1>
+        <p class="text-slate-400 text-sm mt-2">FIFA World Cup লাইভ স্ট্রিমিং</p>
+        <div class="w-60 h-1 bg-slate-700 rounded-full mt-6 overflow-hidden">
+            <div id="progressBar" class="h-full bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full transition-all duration-300" style="width: 0%"></div>
+        </div>
+        <p id="loadingStatus" class="text-xs text-slate-400 mt-3">GitHub থেকে চ্যানেল লোড হচ্ছে...</p>
+    </div>
+
+    <!-- Main App -->
+    <div class="max-w-[1200px] mx-auto px-4 py-4 hidden" id="mainApp">
+        <!-- Header -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 border-b border-slate-200 pb-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-md">
+                    <i class="fas fa-tv text-white text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl md:text-2xl font-black text-slate-800"><span class="gradient-text">স্বাধীন</span> IPTV</h1>
+                    <p class="text-[10px] text-slate-500">FIFA World Cup · লাইভ স্ট্রিমিং</p>
+                </div>
+            </div>
+            <div class="flex items-center justify-between sm:justify-end gap-3 bg-white sm:bg-transparent p-2 sm:p-0 rounded-xl shadow-sm sm:shadow-none">
+                <div class="bg-slate-100 rounded-full px-3 py-1.5 flex items-center gap-2 text-xs md:text-sm text-slate-700" id="userInfo">
+                    <i class="fas fa-user-circle text-slate-500"></i>
+                    <span id="userName">অতিথি</span>
+                    <span id="suspendedBadge" class="hidden suspended-badge"><i class="fas fa-ban mr-1"></i>সাসপেন্ডেড</span>
+                    <button id="loginBtn" class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded-full text-xs transition">লগইন</button>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="bg-red-100 text-red-600 px-3 py-1.5 rounded-full text-xs font-bold"><i class="fas fa-circle text-[6px] mr-1 text-red-500 animate-pulse"></i> <span id="channelCount">0</span></div>
+                    <div id="clock" class="bg-slate-100 text-slate-700 px-3 py-1.5 rounded-full text-xs font-mono">--:--</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ২টা অপশন একদম টপে -->
+        <div class="glass-card p-1.5 flex gap-2 mb-6 max-w-[600px] mx-auto bg-slate-200/50">
+            <div class="top-menu-btn active py-2.5" data-side="all">
+                <i class="fas fa-globe text-base"></i> সকল লাইভ
+            </div>
+            <div class="top-menu-btn py-2.5" data-side="Sports">
+                <i class="fas fa-futbol text-base"></i> শুধু স্পোর্টস
+            </div>
+        </div>
+
+        <div class="space-y-6">
+            <!-- Hero Banner -->
+            <div class="relative h-40 sm:h-48 md:h-56 rounded-2xl overflow-hidden shadow-lg fifa-card">
+                <div class="absolute inset-0 bg-gradient-to-r from-black/90 via-black/50 to-transparent flex items-center px-6">
+                    <div>
+                        <span class="fifa-badge inline-block px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold mb-2"><i class="fas fa-trophy"></i> FIFA World Cup 2026</span>
+                        <h2 id="heroTitle" class="text-xl sm:text-2xl md:text-3xl font-bold text-white">PTV Sports</h2>
+                        <p id="heroDesc" class="text-xs text-yellow-400 mt-1">সরাসরি লাইভ · এক্সক্লুসিভ স্ট্রিমিং</p>
+                        <button id="heroBtn" class="mt-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-slate-950 hover:from-yellow-600 px-5 py-2 rounded-full text-xs font-bold shadow transition"><i class="fas fa-play mr-1"></i> লাইভ দেখুন</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Player -->
+            <div id="playerSection" class="glass-card p-2 sm:p-3 hidden bg-white shadow-md border border-slate-200">
+                <div class="bg-black rounded-xl overflow-hidden">
+                    <video id="hlsVideo" controls playsinline class="w-full max-h-[450px] aspect-video"></video>
+                </div>
+                <div class="p-2 flex justify-between items-center text-slate-800">
+                    <span id="currentChannel" class="font-bold text-sm sm:text-base"></span>
+                    <button id="closePlayer" class="text-slate-400 hover:text-red-500 text-xl transition"><i class="fas fa-times-circle"></i></button>
+                </div>
+            </div>
+
+            <!-- Channel Grid Section -->
+            <div>
+                <h2 id="gridTitle" class="text-lg sm:text-xl font-bold text-slate-800 mb-4 flex items-center gap-2"><i class="fas fa-bolt text-yellow-500"></i> সকল লাইভ চ্যানেল</h2>
+                <div id="channelGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4"></div>
+            </div>
+        </div>
+
+        <footer class="mt-12 pt-6 border-t border-slate-200 text-center text-[10px] sm:text-xs text-slate-500">
+            <p>© ২০২৬ স্বাধীন IPTV | PTV Sports - FIFA World Cup লাইভ</p>
+        </footer>
+    </div>
+
+    <a href="admin.html" class="fixed bottom-6 right-6 bg-slate-800 hover:bg-blue-600 text-white px-4 py-2.5 rounded-full text-xs shadow-lg z-50 transition"><i class="fas fa-chart-bar mr-1"></i> এডমিন</a>
+
+    <script>
+        // ==================== কনফিগারেশন ====================
+        const STORAGE_KEYS = {
+            CHANNELS: 'swadhin_channels',
+            USERS: 'swadhin_users',
+            SUSPENDED: 'swadhin_suspended',
+            CURRENT_USER: 'swadhin_current_user',
+            NOTIFICATIONS: 'swadhin_notifications',
+            SHOWN_NOTIFICATIONS: 'swadhin_shown_notifications'  // ইতিমধ্যে দেখানো নোটিফিকেশন ট্র্যাক
+        };
+
+        let allChannels = [];
+        let currentUser = null;
+        let currentSide = 'all'; 
+        let hlsPlayer = null;
+        let ptvChannel = null;
+        let isUserSuspendedFlag = false;
+
+        // ==================== মিডিলে সেন্টার নোটিফিকেশন কার্ড ====================
+        function showCenterNotification(title, message, type = 'warning', onConfirm = null, onCancel = null) {
+            // আগের ওভারলে থাকলে রিমুভ করুন
+            const existingOverlay = document.querySelector('.center-notification-overlay');
+            if(existingOverlay) existingOverlay.remove();
+            
+            const overlay = document.createElement('div');
+            overlay.className = 'center-notification-overlay';
+            
+            const typeClasses = {
+                suspended: 'center-notif-suspended',
+                payment: 'center-notif-payment',
+                warning: 'center-notif-warning'
+            };
+            
+            const icons = {
+                suspended: { icon: 'fa-ban', bg: '#fee2e2', color: '#ef4444' },
+                payment: { icon: 'fa-credit-card', bg: '#d1fae5', color: '#10b981' },
+                warning: { icon: 'fa-exclamation-triangle', bg: '#fed7aa', color: '#f59e0b' }
+            };
+            
+            const selectedType = typeClasses[type] || typeClasses.warning;
+            const iconData = icons[type] || icons.warning;
+            
+            overlay.innerHTML = `
+                <div class="center-notification-card ${selectedType}">
+                    <div class="center-notif-header">
+                        <div class="center-notif-icon" style="background: ${iconData.bg}; color: ${iconData.color};">
+                            <i class="fas ${iconData.icon} fa-2x"></i>
+                        </div>
+                        <h2 class="center-notif-title" style="color: ${iconData.color};">${title}</h2>
+                    </div>
+                    <div class="center-notif-body">
+                        <p>${message.replace(/\n/g, '<br>')}</p>
+                        ${type === 'payment' ? `
+                            <div class="payment-banner mt-3">
+                                <i class="fas fa-mobile-alt mr-2"></i>
+                                বিকাশ: 01XXXXXXXXX | নগদ: 01XXXXXXXXX
+                            </div>
+                        ` : ''}
+                    </div>
+                    <div class="center-notif-footer">
+                        ${onConfirm ? `<button class="center-notif-btn center-notif-btn-primary" id="notifConfirmBtn">${type === 'payment' ? 'পেমেন্ট করেছি' : 'বুঝেছি'}</button>` : ''}
+                        ${onCancel ? `<button class="center-notif-btn center-notif-btn-secondary" id="notifCancelBtn">পরে দেখব</button>` : '<button class="center-notif-btn center-notif-btn-primary" id="notifCloseBtn">ঠিক আছে</button>'}
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(overlay);
+            
+            // বাটন ইভেন্ট
+            if(onConfirm) {
+                const confirmBtn = overlay.querySelector('#notifConfirmBtn');
+                if(confirmBtn) confirmBtn.onclick = () => {
+                    overlay.remove();
+                    if(onConfirm) onConfirm();
+                };
+            }
+            
+            if(onCancel) {
+                const cancelBtn = overlay.querySelector('#notifCancelBtn');
+                if(cancelBtn) cancelBtn.onclick = () => {
+                    overlay.remove();
+                    if(onCancel) onCancel();
+                };
+            }
+            
+            const closeBtn = overlay.querySelector('#notifCloseBtn');
+            if(closeBtn) closeBtn.onclick = () => overlay.remove();
+            
+            // ব্যাকগ্রাউন্ড ক্লিক করলেও ক্লোজ
+            overlay.onclick = (e) => {
+                if(e.target === overlay) overlay.remove();
+            };
+            
+            return overlay;
+        }
+        
+        // সাসপেন্ডেড নোটিফিকেশন (মিডিলে)
+        function showSuspendedCenterNotification(reason) {
+            showCenterNotification(
+                '⚠️ অ্যাকাউন্ট সাসপেন্ডেড ⚠️',
+                `${reason}\n\nআপনার অ্যাকাউন্টটি সাময়িকভাবে বন্ধ করা হয়েছে।\nদয়া করে আপনার বাকি বিল পরিশোধ করুন এবং প্রশাসকের সাথে যোগাযোগ করুন।\n\nপেমেন্ট সম্পন্ন করলে অ্যাকাউন্ট পুনরায় সক্রিয় হবে।`,
+                'suspended',
+                null,
+                null
+            );
+        }
+        
+        // পেমেন্ট রিমাইন্ডার নোটিফিকেশন (মিডিলে)
+        function showPaymentReminderCenter(amount = 'বাকি টাকা', dueDate = 'অবিলম্বে') {
+            showCenterNotification(
+                '💳 পেমেন্ট রিমাইন্ডার',
+                `প্রিয় ব্যবহারকারী,\n\nআপনার সাবস্ক্রিপশনের ${amount} টাকা বাকি রয়েছে।\nশেষ তারিখ: ${dueDate}\n\nদয়া করে দ্রুত পেমেন্ট সম্পন্ন করুন। অন্যথায় আপনার অ্যাকাউন্ট সাসপেন্ড করা হতে পারে।`,
+                'payment',
+                () => {
+                    // পেমেন্ট করেছি ক্লিক করলে
+                    alert('আপনার রিকুয়েস্ট রেকর্ড করা হয়েছে। প্রশাসক শীঘ্রই যোগাযোগ করবেন।');
+                },
+                () => {
+                    // পরে দেখব ক্লিক করলে
+                    console.log('পরে দেখানো হবে');
+                }
+            );
+        }
+        
+        // জেনেরিক নোটিফিকেশন
+        function showGenericCenterNotification(title, message, type = 'warning') {
+            showCenterNotification(title, message, type, null, null);
+        }
+        
+        // ==================== পেন্ডিং নোটিফিকেশন চেক করা (অফলাইনে থাকলেও অনলাইনে এলে দেখাবে) ====================
+        function checkAndShowPendingNotifications() {
+            if(!currentUser) return;
+            
+            // 1. সাসপেন্ড চেক
+            if(isUserSuspended(currentUser.id)) {
+                const reason = getSuspensionReason(currentUser.id);
+                showSuspendedCenterNotification(reason);
+                return; // সাসপেন্ড থাকলে অন্য নোটিফিকেশন দেখানোর দরকার নেই
+            }
+            
+            // 2. আনরিড নোটিফিকেশন চেক
+            const allNotif = JSON.parse(localStorage.getItem(STORAGE_KEYS.NOTIFICATIONS) || '[]');
+            const shownNotifIds = JSON.parse(localStorage.getItem(STORAGE_KEYS.SHOWN_NOTIFICATIONS) || '[]');
+            
+            const unshownNotifs = allNotif.filter(n => {
+                const isForThisUser = n.forUsers.includes('all') || n.forUsers.includes(currentUser.id);
+                const notShown = !shownNotifIds.includes(n.id);
+                return isForThisUser && notShown;
+            });
+            
+            // সবচেয়ে পুরনো নোটিফিকেশন প্রথমে দেখান
+            if(unshownNotifs.length > 0) {
+                const nextNotif = unshownNotifs[0];
+                
+                // শো করার পর আইডি সেভ করুন
+                shownNotifIds.push(nextNotif.id);
+                localStorage.setItem(STORAGE_KEYS.SHOWN_NOTIFICATIONS, JSON.stringify(shownNotifIds));
+                
+                let type = 'warning';
+                if(nextNotif.title.toLowerCase().includes('সাসপেন্ড') || nextNotif.title.toLowerCase().includes('ব্লক')) {
+                    type = 'suspended';
+                } else if(nextNotif.title.toLowerCase().includes('পেমেন্ট') || nextNotif.title.toLowerCase().includes('বাকি')) {
+                    type = 'payment';
+                }
+                
+                showCenterNotification(nextNotif.title, nextNotif.message, type, null, null);
+            }
+        }
+        
+        // ইউজার সাসপেন্ড চেক
+        function isUserSuspended(userId) {
+            const suspended = JSON.parse(localStorage.getItem(STORAGE_KEYS.SUSPENDED) || '[]');
+            const suspendedUser = suspended.find(s => s.userId === userId);
+            if(suspendedUser) {
+                if(!isUserSuspendedFlag) {
+                    isUserSuspendedFlag = true;
+                }
+                return true;
+            }
+            isUserSuspendedFlag = false;
+            return false;
+        }
+        
+        function getSuspensionReason(userId) {
+            const suspended = JSON.parse(localStorage.getItem(STORAGE_KEYS.SUSPENDED) || '[]');
+            const record = suspended.find(s => s.userId === userId);
+            return record ? record.reason : 'আপনার অ্যাকাউন্ট সাসপেন্ড করা হয়েছে';
+        }
+        
+        // সাসপেন্ড স্ট্যাটাস পরিবর্তন হলে (অ্যাডমিন প্যানেল থেকে পরিবর্তন হলে)
+        function refreshUserStatus() {
+            if(currentUser) {
+                const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
+                const updatedUser = users.find(u => u.id === currentUser.id);
+                if(updatedUser) {
+                    currentUser = updatedUser;
+                    localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(currentUser));
+                }
+                
+                // সাসপেন্ড স্ট্যাটাস চেক করুন
+                const wasSuspended = isUserSuspendedFlag;
+                const nowSuspended = isUserSuspended(currentUser.id);
+                
+                if(nowSuspended && !wasSuspended) {
+                    // নতুন করে সাসপেন্ড করা হয়েছে
+                    showSuspendedCenterNotification(getSuspensionReason(currentUser.id));
+                } else if(!nowSuspended && wasSuspended) {
+                    // আনসাসপেন্ড করা হয়েছে
+                    showGenericCenterNotification('✅ অ্যাকাউন্ট সক্রিয়', 'আপনার অ্যাকাউন্ট পুনরায় সক্রিয় করা হয়েছে। এখন আপনি সকল চ্যানেল দেখতে পারবেন।', 'payment');
+                }
+                
+                updateUI();
+                renderChannels();
+            }
+        }
+        
+        // প্রতি 10 সেকেন্ডে স্ট্যাটাস চেক (অ্যাডমিন পরিবর্তন ট্র্যাক করতে)
+        setInterval(() => {
+            refreshUserStatus();
+            if(currentUser && !isUserSuspended(currentUser.id)) {
+                // নতুন নোটিফিকেশন চেক
+                const allNotif = JSON.parse(localStorage.getItem(STORAGE_KEYS.NOTIFICATIONS) || '[]');
+                const shownNotifIds = JSON.parse(localStorage.getItem(STORAGE_KEYS.SHOWN_NOTIFICATIONS) || '[]');
+                const hasNew = allNotif.some(n => 
+                    (n.forUsers.includes('all') || n.forUsers.includes(currentUser.id)) && 
+                    !shownNotifIds.includes(n.id)
+                );
+                if(hasNew) {
+                    checkAndShowPendingNotifications();
+                }
+            }
+        }, 10000);
+
+        // ==================== প্লেয়ার ফাংশন ====================
+        function initPlayer(url, name, category) {
+            if(currentUser && isUserSuspended(currentUser.id)) {
+                showSuspendedCenterNotification(getSuspensionReason(currentUser.id));
+                return;
+            }
+            
+            if(!currentUser) {
+                showAuthModal();
+                return;
+            }
+            
+            if(hlsPlayer) hlsPlayer.destroy();
+            const video = document.getElementById('hlsVideo');
+            if(Hls.isSupported()) {
+                hlsPlayer = new Hls();
+                hlsPlayer.attachMedia(video);
+                hlsPlayer.on(Hls.Events.MEDIA_ATTACHED, () => hlsPlayer.loadSource(url));
+                hlsPlayer.on(Hls.Events.MANIFEST_PARSED, () => video.play());
+            } else if(video.canPlayType('application/vnd.apple.mpegurl')) {
+                video.src = url;
+                video.addEventListener('loadedmetadata', () => video.play());
+            }
+            document.getElementById('currentChannel').innerText = name;
+            document.getElementById('playerSection').classList.remove('hidden');
+            document.getElementById('playerSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // ==================== চ্যানেল রেন্ডার ====================
+        function renderChannels() {
+            let channels = [...allChannels];
+            const titleEl = document.getElementById('gridTitle');
+            
+            if(currentSide === 'Sports') {
+                channels = channels.filter(ch => ch.group === 'Sports');
+                titleEl.innerHTML = `<i class="fas fa-futbol text-blue-500"></i> শুধু স্পোর্টস চ্যানেল`;
+            } else {
+                titleEl.innerHTML = `<i class="fas fa-bolt text-yellow-500"></i> সকল লাইভ চ্যানেল`;
+            }
+            
+            document.getElementById('channelCount').innerText = channels.length;
+            const container = document.getElementById('channelGrid');
+            
+            if(channels.length === 0) {
+                container.innerHTML = `<div class="col-span-full text-center py-12 text-slate-400 bg-white rounded-2xl border border-slate-200 shadow-sm"><i class="fas fa-tv-slash text-4xl mb-2 text-slate-300"></i><p>কোন চ্যানেল পাওয়া যায়নি</p></div>`;
+                return;
+            }
+            
+            const isSuspended = currentUser && isUserSuspended(currentUser.id);
+            
+            container.innerHTML = channels.map(ch => `
+                <div class="channel-card glass-card p-2.5 sm:p-3 ${!currentUser ? 'locked-channel' : ''} ${isSuspended ? 'suspended-channel' : ''}" data-id="${ch.id}">
+                    <div class="relative flex justify-center items-center h-20 sm:h-24 bg-slate-50 border border-slate-100 rounded-xl mb-2 overflow-hidden">
+                        ${ch.logo && ch.logo !== "" ? `<img src="${ch.logo}" class="max-h-12 sm:max-h-14 max-w-full object-contain" onerror="this.src='https://placehold.co/80x50?text=TV'">` : `<i class="fas fa-tv text-2xl sm:text-3xl text-slate-300"></i>`}
+                        <span class="absolute top-2 right-2 live-badge w-1.5 h-1.5 rounded-full"></span>
+                        <span class="absolute bottom-1.5 left-1.5 text-[8px] bg-green-600 text-white px-1.5 py-0.5 rounded-full font-medium">লাইভ</span>
+                        ${ch.group === 'Sports' ? '<span class="absolute top-1.5 left-1.5 text-[8px] bg-yellow-500 text-slate-950 px-1.5 py-0.5 rounded-full font-bold">SPORTS</span>' : ''}
+                    </div>
+                    <div class="min-w-0">
+                        <h3 class="font-bold text-xs sm:text-sm text-slate-800 truncate">${ch.name}</h3>
+                        <p class="text-[9px] sm:text-[10px] text-slate-500 truncate">${ch.group || 'General'}</p>
+                    </div>
+                </div>
+            `).join('');
+            
+            document.querySelectorAll('.channel-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    if(currentUser && isUserSuspended(currentUser.id)) {
+                        showSuspendedCenterNotification(getSuspensionReason(currentUser.id));
+                        return;
+                    }
+                    
+                    if(!currentUser) {
+                        showAuthModal();
+                        return;
+                    }
+                    const id = parseInt(card.dataset.id);
+                    const ch = allChannels.find(c => c.id === id);
+                    if(ch && ch.url) initPlayer(ch.url, ch.name, ch.group);
+                });
+            });
+        }
+
+        // ==================== লগইন মোডাল ====================
+        function showAuthModal() {
+            const modal = document.createElement('div');
+            modal.className = 'auth-overlay';
+            modal.innerHTML = `
+                <div class="auth-card p-5 sm:p-6 mx-4">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-black text-slate-800"><span class="gradient-text">স্বাধীন IPTV</span></h2>
+                        <button onclick="this.closest('.auth-overlay').remove()" class="text-slate-400 hover:text-slate-600 text-2xl transition">&times;</button>
+                    </div>
+                    <div class="flex gap-3 mb-5 border-b border-slate-200 pb-2">
+                        <button class="auth-tab flex-1 py-1.5 text-center font-bold text-blue-600 border-b-2 border-blue-600" data-tab="login">লগইন</button>
+                        <button class="auth-tab flex-1 py-1.5 text-center font-bold text-slate-400" data-tab="register">রেজিস্টার</button>
+                    </div>
+                    <div id="loginForm" class="space-y-3">
+                        <input type="text" id="loginPhone" placeholder="মোবাইল নম্বর বা ইউজারনেম" class="auth-input">
+                        <input type="password" id="loginPassword" placeholder="পাসওয়ার্ড" class="auth-input">
+                        <button onclick="handleLogin()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-full font-semibold shadow transition">লগইন করুন</button>
+                    </div>
+                    <div id="registerForm" class="hidden space-y-3">
+                        <input type="text" id="regName" placeholder="আপনার নাম" class="auth-input">
+                        <input type="tel" id="regPhone" placeholder="মোবাইল নম্বর (01XXXXXXXXX)" class="auth-input">
+                        <input type="text" id="regUsername" placeholder="ইউজারনেম" class="auth-input">
+                        <input type="password" id="regPassword" placeholder="পাসওয়ার্ড (৬+ অক্ষর)" class="auth-input">
+                        <button onclick="handleRegister()" class="w-full bg-green-600 hover:bg-green-700 text-white py-2.5 rounded-full font-semibold shadow transition">রেজিস্টার করুন</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            
+            modal.querySelectorAll('.auth-tab').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const tab = btn.dataset.tab;
+                    modal.querySelectorAll('.auth-tab').forEach(b => {
+                        b.classList.remove('text-blue-600', 'border-b-2', 'border-blue-600');
+                        b.classList.add('text-slate-400');
+                    });
+                    btn.classList.add('text-blue-600', 'border-b-2', 'border-blue-600');
+                    btn.classList.remove('text-slate-400');
+                    document.getElementById('loginForm').classList.toggle('hidden', tab !== 'login');
+                    document.getElementById('registerForm').classList.toggle('hidden', tab !== 'register');
+                });
+            });
+        }
+
+        // ==================== লগইন হ্যান্ডলার ====================
+        window.handleLogin = function() {
+            const phone = document.getElementById('loginPhone').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
+            const user = users.find(u => (u.phone === phone || u.username === phone) && u.password === password);
+            
+            if(!user) { alert('ভুল তথ্য!'); return; }
+            
+            currentUser = user;
+            localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(currentUser));
+            document.querySelector('.auth-overlay')?.remove();
+            updateUI();
+            renderChannels();
+            
+            // লগইন করার পর অবিলম্বে পেন্ডিং নোটিফিকেশন চেক
+            isUserSuspended(currentUser.id);
+            checkAndShowPendingNotifications();
+            
+            if(!isUserSuspendedFlag) {
+                alert('✅ লগইন সফল!');
+            }
+        };
+
+        // ==================== রেজিস্টার হ্যান্ডলার ====================
+        window.handleRegister = function() {
+            const name = document.getElementById('regName').value.trim();
+            const phone = document.getElementById('regPhone').value.trim();
+            const username = document.getElementById('regUsername').value.trim();
+            const password = document.getElementById('regPassword').value;
+            
+            if(!name || !phone || !username || !password) { alert('সব তথ্য দিন'); return; }
+            if(!/^01[3-9]\d{8}$/.test(phone)) { alert('সঠিক মোবাইল নম্বর দিন'); return; }
+            if(password.length < 6) { alert('পাসওয়ার্ড ৬+ অক্ষর'); return; }
+            
+            const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
+            if(users.find(u => u.phone === phone)) { alert('এই নম্বর already registered'); return; }
+            if(users.find(u => u.username === username)) { alert('ইউজারনেম taken'); return; }
+            
+            const newUser = {
+                id: 'user_' + Date.now(),
+                name, phone, username, password,
+                createdAt: new Date().toISOString()
+            };
+            users.push(newUser);
+            localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+            
+            currentUser = newUser;
+            localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(currentUser));
+            document.querySelector('.auth-overlay')?.remove();
+            updateUI();
+            renderChannels();
+            alert('✅ রেজিস্টার সফল!');
+        };
+
+        // ==================== লগআউট ====================
+        function logout() {
+            if(confirm('লগআউট করবেন?')) {
+                currentUser = null;
+                isUserSuspendedFlag = false;
+                localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
+                updateUI();
+                renderChannels();
+                // ওপেন নোটিফিকেশন ওভারলে থাকলে রিমুভ
+                const overlay = document.querySelector('.center-notification-overlay');
+                if(overlay) overlay.remove();
+            }
+        }
+
+        // ==================== ইউজার UI আপডেট ====================
+        function updateUI() {
+            const userNameSpan = document.getElementById('userName');
+            const loginBtn = document.getElementById('loginBtn');
+            const suspendedBadge = document.getElementById('suspendedBadge');
+            
+            if(currentUser) {
+                userNameSpan.innerText = currentUser.name.split(' ')[0];
+                
+                if(isUserSuspended(currentUser.id)) {
+                    suspendedBadge.classList.remove('hidden');
+                    loginBtn.innerText = 'লগআউট';
+                    loginBtn.onclick = logout;
+                    loginBtn.classList.remove('bg-blue-600');
+                    loginBtn.classList.add('bg-red-600');
+                } else {
+                    suspendedBadge.classList.add('hidden');
+                    loginBtn.innerText = 'লগআউট';
+                    loginBtn.onclick = logout;
+                    loginBtn.classList.remove('bg-red-600');
+                    loginBtn.classList.add('bg-red-600');
+                }
+            } else {
+                suspendedBadge.classList.add('hidden');
+                userNameSpan.innerText = 'অতিথি';
+                loginBtn.innerText = 'লগইন';
+                loginBtn.onclick = showAuthModal;
+                loginBtn.classList.remove('bg-red-600');
+                loginBtn.classList.add('bg-blue-600');
+            }
+        }
+
+        // ==================== মেনু সেট ====================
+        function setActiveMenu(side) {
+            currentSide = side;
+            document.querySelectorAll('.top-menu-btn').forEach(el => el.classList.remove('active'));
+            document.querySelector(`.top-menu-btn[data-side="${side}"]`)?.classList.add('active');
+            renderChannels();
+        }
+
+        // ==================== হিরো বাটন ====================
+        function setupHeroButton() {
+            const heroBtn = document.getElementById('heroBtn');
+            heroBtn.onclick = () => {
+                if(currentUser && isUserSuspended(currentUser.id)) {
+                    showSuspendedCenterNotification(getSuspensionReason(currentUser.id));
+                    return;
+                }
+                if(!currentUser) {
+                    showAuthModal();
+                    return;
+                }
+                if(ptvChannel && ptvChannel.url) {
+                    initPlayer(ptvChannel.url, ptvChannel.name, ptvChannel.group);
+                }
+            };
+        }
+
+        // ==================== GitHub থেকে JSON লোড ====================
+        async function loadChannels() {
+            try {
+                const response = await fetch('https://raw.githubusercontent.com/foridul422/IPTV-/main/channels.json');
+                if(!response.ok) throw new Error('Network error - ' + response.status);
+                
+                const data = await response.json();
+                console.log('✅ চ্যানেল লোড হয়েছে:', data.length, 'টি');
+                
+                allChannels = data.map((ch, idx) => ({
+                    ...ch,
+                    id: idx + 1,
+                    group: ch.group || "General"
+                }));
+                
+                const ptvIndex = allChannels.findIndex(ch => ch.name === "PTV Sports");
+                if(ptvIndex > -1 && ptvIndex !== 0) {
+                    const ptv = allChannels[ptvIndex];
+                    allChannels.splice(ptvIndex, 1);
+                    allChannels.unshift(ptv);
+                }
+                
+                localStorage.setItem(STORAGE_KEYS.CHANNELS, JSON.stringify(allChannels));
+                finishLoading();
+                
+            } catch(error) {
+                console.error('Error loading channels:', error);
+                document.getElementById('loadingStatus').innerHTML = '❌ চ্যানেল লোড করতে ব্যর্থ হয়েছে! ইন্টারনেট চেক করুন';
+                document.getElementById('loadingStatus').classList.add('text-red-400');
+                
+                setTimeout(() => {
+                    const btn = document.createElement('button');
+                    btn.innerHTML = '<i class="fas fa-sync-alt mr-1"></i> রিলোড';
+                    btn.className = 'mt-4 bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-full text-sm';
+                    btn.onclick = () => location.reload();
+                    document.getElementById('loadingScreen').appendChild(btn);
+                }, 500);
+            }
+        }
+        
+        // ==================== ফিনিশ লোডিং ====================
+        function finishLoading() {
+            ptvChannel = allChannels.find(ch => ch.name === "PTV Sports");
+            if(ptvChannel) {
+                document.getElementById('heroTitle').innerText = ptvChannel.name;
+                setupHeroButton();
+            }
+            
+            const savedUser = localStorage.getItem(STORAGE_KEYS.CURRENT_USER);
+            if(savedUser) {
+                currentUser = JSON.parse(savedUser);
+                const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
+                const validUser = users.find(u => u.id === currentUser.id);
+                if(validUser) {
+                    currentUser = validUser;
+                    isUserSuspended(currentUser.id);
+                    // লোড শেষে পেন্ডিং নোটিফিকেশন চেক
+                    setTimeout(() => checkAndShowPendingNotifications(), 1000);
+                } else {
+                    currentUser = null;
+                    localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
+                }
+            }
+            
+            updateUI();
+            renderChannels();
+            
+            document.getElementById('loadingScreen').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('loadingScreen').style.display = 'none';
+                document.getElementById('mainApp').classList.remove('hidden');
+            }, 500);
+        }
+
+        // ==================== ক্লক ====================
+        function updateClock() {
+            document.getElementById('clock').innerHTML = new Date().toLocaleTimeString('bn-BD', {hour:'2-digit', minute:'2-digit'});
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // ==================== ইভেন্ট লিসেনার ====================
+        document.getElementById('closePlayer').onclick = () => {
+            if(hlsPlayer) hlsPlayer.destroy();
+            document.getElementById('playerSection').classList.add('hidden');
+            document.getElementById('hlsVideo').pause();
+        };
+
+        document.querySelectorAll('.top-menu-btn').forEach(el => el.addEventListener('click', () => setActiveMenu(el.dataset.side)));
+
+        let progress = 0;
+        const progressInterval = setInterval(() => {
+            if (progress < 90) {
+                progress += 5;
+                document.getElementById('progressBar').style.width = `${progress}%`;
+            }
+        }, 100);
+
+        loadChannels();
+    </script>
+</body>
+</html>
