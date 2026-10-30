@@ -1,51 +1,618 @@
-<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CutePussy — Embed Manager</title>
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ভিডিও অ্যাডমিন প্যানেল</title>
 <style>
-*{box-sizing:border-box}body{margin:0;background:#101114;color:#f4f5f7;font:14px Arial;padding:24px}main{max-width:850px;margin:auto}section{background:#202229;border:1px solid #30333b;padding:22px;border-radius:8px;margin:16px 0}
-h1 span{color:#e52b45}label{display:block;margin:12px 0 6px;color:#ddd}input,select{width:100%;padding:11px;background:#0f1013;border:1px solid #393c45;color:white;border-radius:4px}
-button{background:#e52b45;color:white;border:0;padding:10px 14px;border-radius:4px;cursor:pointer;margin-top:14px}button.secondary{background:#41434b}button.danger{background:#7d2635}
-small,.muted{color:#a6aab3;line-height:1.5}.item{border-top:1px solid #393c45;padding:13px 0;display:flex;justify-content:space-between;gap:12px;align-items:center}.item strong{display:block;margin-bottom:5px;overflow-wrap:anywhere}.notice{background:#342a17;border:1px solid #735b2b;padding:12px;border-radius:5px;color:#f1dfb6;line-height:1.5}
-a{color:white} .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:600px){.row{grid-template-columns:1fr}.item{align-items:flex-start;flex-direction:column}}
-</style></head><body><main>
-<h1>Cute<span>Pussy</span> — Embed Manager</h1>
-<p><a href="index.html">← Back to website</a></p>
-<div class="notice"><b>Prototype warning:</b> This page saves entries only in this browser's localStorage. It is not a real secure admin system and does not publish changes to other visitors. Before public launch, replace it with server-side authentication and a database. Add only videos you own or are explicitly authorized to embed. Confirm each provider's current terms and applicable laws.</div>
-<section><h2>Add an authorized external embed</h2>
-<form id="addForm">
-<label for="title">Video title</label><input id="title" maxlength="120" required placeholder="Enter an accurate title">
-<div class="row"><div><label for="provider">Provider</label><select id="provider"><option value="Pornhub">Pornhub</option><option value="xHamster">xHamster</option></select></div>
-<div><label for="category">Category</label><select id="category"><option value="latest">Latest</option><option value="top">Top Rated</option><option value="views">Most Viewed</option><option value="community">Community</option></select></div></div>
-<label for="url">Official HTTPS embed URL</label><input id="url" type="url" required placeholder="Paste the provider's official iframe src URL">
-<small>Paste the embed URL from the provider's Share / Embed option. This tool does not scrape, download, or convert watch-page links. Only HTTPS embed paths from pornhub.com, pornhub.org, or xhamster.com are accepted.</small>
-<br><button type="submit">Add video to this browser</button>
-</form><p id="msg" class="muted" aria-live="polite"></p></section>
-<section><h2>Saved in this browser</h2><div id="items" class="muted">No entries yet.</div></section>
-</main>
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
+  body { background: #0f172a; color: #e2e8f0; min-height: 100vh; }
+
+  /* ===== Layout ===== */
+  .layout { display: flex; min-height: 100vh; }
+
+  /* Sidebar */
+  .sidebar {
+    width: 250px; background: #1e293b; padding: 20px 0;
+    border-right: 1px solid #334155; flex-shrink: 0;
+  }
+  .logo {
+    padding: 0 20px 20px; font-size: 20px; font-weight: 700;
+    color: #38bdf8; border-bottom: 1px solid #334155; margin-bottom: 15px;
+  }
+  .nav-item {
+    padding: 14px 20px; cursor: pointer; display: flex; align-items: center;
+    gap: 12px; color: #94a3b8; transition: .2s; border-left: 3px solid transparent;
+  }
+  .nav-item:hover { background: #334155; color: #fff; }
+  .nav-item.active { background: #334155; color: #38bdf8; border-left-color: #38bdf8; }
+  .nav-item .icon { font-size: 18px; }
+
+  /* Main */
+  .main { flex: 1; padding: 30px; overflow-y: auto; }
+  .header { margin-bottom: 25px; }
+  .header h1 { font-size: 26px; color: #f1f5f9; }
+  .header p { color: #94a3b8; margin-top: 5px; font-size: 14px; }
+
+  /* Cards */
+  .card {
+    background: #1e293b; border-radius: 12px; padding: 25px;
+    border: 1px solid #334155; margin-bottom: 25px;
+  }
+  .card h2 { font-size: 18px; margin-bottom: 20px; color: #38bdf8; display: flex; align-items: center; gap: 8px; }
+
+  /* Form */
+  .form-group { margin-bottom: 18px; }
+  .form-group label { display: block; margin-bottom: 8px; font-size: 14px; color: #cbd5e1; font-weight: 500; }
+  .form-group input[type="text"],
+  .form-group input[type="url"],
+  .form-group textarea,
+  .form-group select {
+    width: 100%; padding: 12px 14px; background: #0f172a; border: 1px solid #334155;
+    border-radius: 8px; color: #e2e8f0; font-size: 14px; outline: none; transition: .2s;
+  }
+  .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+    border-color: #38bdf8; box-shadow: 0 0 0 3px rgba(56,189,248,.15);
+  }
+  .form-group textarea { resize: vertical; min-height: 80px; }
+  .form-group input[type="file"] {
+    width: 100%; padding: 10px; background: #0f172a; border: 1px dashed #475569;
+    border-radius: 8px; color: #94a3b8; cursor: pointer;
+  }
+  .form-group input[type="file"]::file-selector-button {
+    background: #38bdf8; color: #0f172a; border: none; padding: 8px 16px;
+    border-radius: 6px; cursor: pointer; font-weight: 600; margin-right: 12px;
+  }
+
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+
+  /* Buttons */
+  .btn {
+    padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer;
+    font-size: 14px; font-weight: 600; transition: .2s; display: inline-flex;
+    align-items: center; gap: 8px;
+  }
+  .btn-primary { background: #38bdf8; color: #0f172a; }
+  .btn-primary:hover { background: #0ea5e9; }
+  .btn-danger { background: #ef4444; color: #fff; padding: 8px 14px; font-size: 12px; }
+  .btn-danger:hover { background: #dc2626; }
+  .btn-success { background: #22c55e; color: #fff; padding: 8px 14px; font-size: 12px; }
+  .btn-success:hover { background: #16a34a; }
+
+  /* Preview */
+  .preview-box {
+    margin-top: 12px; border: 1px dashed #475569; border-radius: 8px;
+    padding: 10px; display: none; background: #0f172a;
+  }
+  .preview-box img, .preview-box video {
+    max-width: 100%; max-height: 220px; border-radius: 6px; display: block; margin: 0 auto;
+  }
+  .preview-box.show { display: block; }
+
+  /* Video Grid */
+  .video-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 18px;
+  }
+  .video-card {
+    background: #0f172a; border-radius: 10px; overflow: hidden;
+    border: 1px solid #334155; transition: .2s;
+  }
+  .video-card:hover { transform: translateY(-3px); border-color: #38bdf8; }
+  .video-card .thumb {
+    width: 100%; height: 140px; object-fit: cover; background: #000;
+  }
+  .video-card .info { padding: 12px; }
+  .video-card .info h3 {
+    font-size: 14px; color: #f1f5f9; margin-bottom: 6px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .video-card .info .meta {
+    font-size: 11px; color: #94a3b8; margin-bottom: 10px;
+    display: flex; justify-content: space-between;
+  }
+  .badge {
+    display: inline-block; padding: 2px 8px; border-radius: 20px;
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+  }
+  .badge-upload { background: #164e63; color: #38bdf8; }
+  .badge-embed { background: #4c1d95; color: #c4b5fd; }
+  .video-card .actions { display: flex; gap: 6px; margin-top: 8px; }
+  .video-card .actions .btn { flex: 1; justify-content: center; }
+
+  /* Empty state */
+  .empty {
+    text-align: center; padding: 50px 20px; color: #64748b;
+  }
+  .empty .big { font-size: 50px; margin-bottom: 15px; }
+
+  /* Toast */
+  .toast {
+    position: fixed; bottom: 30px; right: 30px; background: #22c55e; color: #fff;
+    padding: 14px 22px; border-radius: 8px; font-weight: 600; font-size: 14px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.4); transform: translateX(400px);
+    transition: .3s; z-index: 9999;
+  }
+  .toast.show { transform: translateX(0); }
+  .toast.error { background: #ef4444; }
+
+  /* Stats */
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-bottom: 25px; }
+  .stat-card {
+    background: #1e293b; padding: 20px; border-radius: 10px; border: 1px solid #334155;
+  }
+  .stat-card .num { font-size: 28px; font-weight: 700; color: #38bdf8; }
+  .stat-card .lbl { font-size: 13px; color: #94a3b8; margin-top: 5px; }
+
+  @media (max-width: 768px) {
+    .layout { flex-direction: column; }
+    .sidebar { width: 100%; display: flex; padding: 10px; overflow-x: auto; }
+    .logo { display: none; }
+    .nav-item { padding: 10px 15px; white-space: nowrap; border-left: none; border-bottom: 3px solid transparent; }
+    .nav-item.active { border-bottom-color: #38bdf8; border-left: none; }
+    .row, .stats { grid-template-columns: 1fr; }
+    .main { padding: 15px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="layout">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="logo">🎬 ভিডিও অ্যাডমিন</div>
+    <div class="nav-item active" data-view="dashboard"><span class="icon">📊</span> ড্যাশবোর্ড</div>
+    <div class="nav-item" data-view="upload"><span class="icon">⬆️</span> কাস্টম ভিডিও আপলোড</div>
+    <div class="nav-item" data-view="embed"><span class="icon">🔗</span> এম্বেড ভিডিও (Pornhub/xHamster)</div>
+    <div class="nav-item" data-view="manage"><span class="icon">🎞️</span> ভিডিও ম্যানেজমেন্ট</div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main">
+    <div class="header">
+      <h1 id="pageTitle">ড্যাশবোর্ড</h1>
+      <p id="pageSubtitle">আপনার ভিডিও ওয়েবসাইট পরিচালনা করুন</p>
+    </div>
+
+    <!-- ============ DASHBOARD ============ -->
+    <section id="view-dashboard">
+      <div class="stats">
+        <div class="stat-card">
+          <div class="num" id="statTotal">0</div>
+          <div class="lbl">মোট ভিডিও</div>
+        </div>
+        <div class="stat-card">
+          <div class="num" id="statUpload">0</div>
+          <div class="lbl">আপলোড করা</div>
+        </div>
+        <div class="stat-card">
+          <div class="num" id="statEmbed">0</div>
+          <div class="lbl">এম্বেড করা</div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>🕒 সাম্প্রতিক ভিডিও</h2>
+        <div id="recentVideos" class="video-grid"></div>
+      </div>
+    </section>
+
+    <!-- ============ UPLOAD VIEW ============ -->
+    <section id="view-upload" style="display:none">
+      <div class="card">
+        <h2>⬆️ কাস্টম ভিডিও আপলোড (থাম্বনেইলসহ)</h2>
+        <form id="uploadForm">
+          <div class="form-group">
+            <label>ভিডিও শিরোনাম *</label>
+            <input type="text" id="upTitle" placeholder="ভিডিওর শিরোনাম লিখুন..." required>
+          </div>
+          <div class="form-group">
+            <label>বিবরণ</label>
+            <textarea id="upDesc" placeholder="ভিডিওর সংক্ষিপ্ত বিবরণ..."></textarea>
+          </div>
+          <div class="row">
+            <div class="form-group">
+              <label>ক্যাটাগরি</label>
+              <select id="upCategory">
+                <option value="Latest">Latest</option>
+                <option value="Top Rated">Top Rated</option>
+                <option value="Most Viewed">Most Viewed</option>
+                <option value="Community">Community</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>ভিডিও ফাইল * (MP4, WebM)</label>
+              <input type="file" id="upVideo" accept="video/*" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>থাম্বনেইল ছবি *</label>
+            <input type="file" id="upThumb" accept="image/*" required>
+            <div class="preview-box" id="thumbPreview">
+              <img id="thumbPreviewImg" alt="থাম্বনেইল প্রিভিউ">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>ভিডিও প্রিভিউ</label>
+            <div class="preview-box" id="videoPreview">
+              <video id="videoPreviewEl" controls></video>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary">✅ ভিডিও আপলোড করুন</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- ============ EMBED VIEW ============ -->
+    <section id="view-embed" style="display:none">
+      <div class="card">
+        <h2>🔗 এম্বেড ভিডিও যোগ করুন (Pornhub / xHamster)</h2>
+        <form id="embedForm">
+          <div class="form-group">
+            <label>ভিডিও শিরোনাম *</label>
+            <input type="text" id="emTitle" placeholder="ভিডিওর শিরোনাম লিখুন..." required>
+          </div>
+          <div class="form-group">
+            <label>বিবরণ</label>
+            <textarea id="emDesc" placeholder="ভিডিওর সংক্ষিপ্ত বিবরণ..."></textarea>
+          </div>
+          <div class="row">
+            <div class="form-group">
+              <label>ক্যাটাগরি</label>
+              <select id="emCategory">
+                <option value="Latest">Latest</option>
+                <option value="Top Rated">Top Rated</option>
+                <option value="Most Viewed">Most Viewed</option>
+                <option value="Community">Community</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>প্রোভাইডার</label>
+              <select id="emProvider">
+                <option value="Pornhub">Pornhub</option>
+                <option value="xHamster">xHamster</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>এম্বেড URL / iframe Link *</label>
+            <input type="url" id="emUrl" placeholder="যেমন: https://www.pornhub.com/embed/..." required>
+          </div>
+          <div class="form-group">
+            <label>থাম্বনেইল ছবি *</label>
+            <input type="file" id="emThumb" accept="image/*" required>
+            <div class="preview-box" id="emThumbPreview">
+              <img id="emThumbImg" alt="থাম্বনেইল প্রিভিউ">
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary">✅ এম্বেড ভিডিও যোগ করুন</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- ============ MANAGE VIEW ============ -->
+    <section id="view-manage" style="display:none">
+      <div class="card">
+        <h2>🎞️ ভিডিও ম্যানেজমেন্ট সিস্টেম</h2>
+        <div class="form-group" style="margin-bottom:20px">
+          <input type="text" id="searchInput" placeholder="🔍 ভিডিও খুঁজুন...">
+        </div>
+        <div id="manageList" class="video-grid"></div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
 <script>
-const KEY="cutepussy_embeds_v1";
-function read(){try{return JSON.parse(localStorage.getItem(KEY)||"[]")}catch(e){return []}}
-function valid(raw,provider){
- try{const u=new URL(raw);if(u.protocol!=="https:"||!u.pathname.toLowerCase().includes("embed"))return false;const h=u.hostname.toLowerCase();
- const ok=provider==="Pornhub"?["pornhub.com","pornhub.org"].some(d=>h===d||h.endsWith("."+d)):["xhamster.com"].some(d=>h===d||h.endsWith("."+d));
- return ok;
- }catch(e){return false}
+const STORAGE_KEY = 'cutepussy_embeds_v1';
+
+function loadVideos() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+  catch { return []; }
 }
-function draw(){
- const root=document.getElementById("items"),data=read();root.innerHTML="";
- if(!data.length){root.textContent="No entries yet.";return}
- data.forEach(v=>{
-  const row=document.createElement("div");row.className="item";
-  const info=document.createElement("div");const strong=document.createElement("strong");strong.textContent=v.title;const small=document.createElement("small");small.textContent=v.provider+" · "+v.category;info.append(strong,small);
-  const del=document.createElement("button");del.className="danger";del.textContent="Delete";del.onclick=()=>{localStorage.setItem(KEY,JSON.stringify(read().filter(x=>x.id!==v.id)));draw()};
-  row.append(info,del);root.append(row);
- });
+function saveVideos(list) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
 }
-document.getElementById("addForm").addEventListener("submit",e=>{
- e.preventDefault();const title=document.getElementById("title").value.trim(),provider=document.getElementById("provider").value,category=document.getElementById("category").value,url=document.getElementById("url").value.trim();
- if(!title){return}
- if(!valid(url,provider)){document.getElementById("msg").textContent="URL rejected. Use the official HTTPS embed URL for the selected provider.";return}
- const data=read();data.unshift({id:Date.now().toString(36)+Math.random().toString(36).slice(2),title,provider,category,url});
- localStorage.setItem(KEY,JSON.stringify(data));e.target.reset();document.getElementById("msg").textContent="Added to this browser. Open index.html in the same browser to preview.";draw();
+
+let videos = loadVideos();
+let currentView = 'dashboard';
+
+/* ================= Navigation ================= */
+const navItems = document.querySelectorAll('.nav-item');
+const views = {
+  dashboard: document.getElementById('view-dashboard'),
+  upload: document.getElementById('view-upload'),
+  embed: document.getElementById('view-embed'),
+  manage: document.getElementById('view-manage')
+};
+const titles = {
+  dashboard: ['ড্যাশবোর্ড', 'আপনার ভিডিও ওয়েবসাইট পরিচালনা করুন'],
+  upload: ['কাস্টম ভিডিও আপলোড', 'কাস্টম ফাইল ও থাম্বনেইলসহ ভিডিও আপলোড করুন'],
+  embed: ['এম্বেড ভিডিও', 'Pornhub বা xHamster-এর এম্বেড লিংক যুক্ত করুন'],
+  manage: ['ভিডিও ম্যানেজমেন্ট', 'সব ভিডিও দেখা, এডিট বা ডিলিট করুন']
+};
+
+navItems.forEach(item => {
+  item.addEventListener('click', () => switchView(item.dataset.view));
 });
-draw();
-</script></body></html>
+
+function switchView(view) {
+  currentView = view;
+  navItems.forEach(n => n.classList.toggle('active', n.dataset.view === view));
+  Object.keys(views).forEach(k => views[k].style.display = (k === view ? 'block' : 'none'));
+  document.getElementById('pageTitle').textContent = titles[view][0];
+  document.getElementById('pageSubtitle').textContent = titles[view][1];
+  if (view === 'dashboard') renderDashboard();
+  if (view === 'manage') renderManage();
+}
+
+/* ================= Toast Notification ================= */
+function showToast(msg, isError = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (isError ? ' error' : '');
+  clearTimeout(t._timeout);
+  t._timeout = setTimeout(() => { t.className = 'toast'; }, 3000);
+}
+
+/* ================= File to Base64 ================= */
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+/* ================= Image & Video Previews ================= */
+document.getElementById('upThumb').addEventListener('change', async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const b64 = await fileToBase64(file);
+  document.getElementById('thumbPreviewImg').src = b64;
+  document.getElementById('thumbPreview').classList.add('show');
+});
+
+document.getElementById('emThumb').addEventListener('change', async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const b64 = await fileToBase64(file);
+  document.getElementById('emThumbImg').src = b64;
+  document.getElementById('emThumbPreview').classList.add('show');
+});
+
+document.getElementById('upVideo').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const url = URL.createObjectURL(file);
+  const videoEl = document.getElementById('videoPreviewEl');
+  videoEl.src = url;
+  document.getElementById('videoPreview').classList.add('show');
+});
+
+/* ================= Upload Form Submit ================= */
+document.getElementById('uploadForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const title = document.getElementById('upTitle').value.trim();
+  const desc = document.getElementById('upDesc').value.trim();
+  const cat = document.getElementById('upCategory').value;
+  const videoFile = document.getElementById('upVideo').files[0];
+  const thumbFile = document.getElementById('upThumb').files[0];
+
+  if (!title || !videoFile || !thumbFile) {
+    showToast('সব প্রয়োজনীয় ঘর পূরণ করুন', true);
+    return;
+  }
+
+  const btn = e.target.querySelector('button[type="submit"]');
+  btn.disabled = true;
+  btn.textContent = '⏳ প্রসেসিং হচ্ছে...';
+
+  try {
+    const videoData = await fileToBase64(videoFile);
+    const thumbData = await fileToBase64(thumbFile);
+
+    const newVideo = {
+      id: 'v_' + Date.now(),
+      type: 'upload',
+      title,
+      desc,
+      category: cat.toLowerCase(),
+      provider: 'Custom',
+      url: videoData,
+      thumbnail: thumbData,
+      createdAt: new Date().toISOString()
+    };
+    videos.unshift(newVideo);
+    saveVideos(videos);
+
+    e.target.reset();
+    document.getElementById('thumbPreview').classList.remove('show');
+    document.getElementById('videoPreview').classList.remove('show');
+    showToast('✅ কাস্টম ভিডিও সফলভাবে আপলোড হয়েছে!');
+  } catch (err) {
+    console.error(err);
+    showToast('আপলোডে সমস্যা হয়েছে', true);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '✅ ভিডিও আপলোড করুন';
+  }
+});
+
+/* ================= Embed Form Submit ================= */
+document.getElementById('embedForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const title = document.getElementById('emTitle').value.trim();
+  const desc = document.getElementById('emDesc').value.trim();
+  const cat = document.getElementById('emCategory').value;
+  const provider = document.getElementById('emProvider').value;
+  const url = document.getElementById('emUrl').value.trim();
+  const thumbFile = document.getElementById('emThumb').files[0];
+
+  if (!title || !url || !thumbFile) {
+    showToast('সব প্রয়োজনীয় ঘর পূরণ করুন', true);
+    return;
+  }
+
+  try {
+    const thumbData = await fileToBase64(thumbFile);
+    const newVideo = {
+      id: 'e_' + Date.now(),
+      type: 'embed',
+      title,
+      desc,
+      category: cat.toLowerCase(),
+      provider: provider,
+      url: url,
+      thumbnail: thumbData,
+      createdAt: new Date().toISOString()
+    };
+    videos.unshift(newVideo);
+    saveVideos(videos);
+
+    e.target.reset();
+    document.getElementById('emThumbPreview').classList.remove('show');
+    showToast('✅ এম্বেড ভিডিও সফলভাবে যোগ হয়েছে!');
+  } catch (err) {
+    console.error(err);
+    showToast('সমস্যা হয়েছে', true);
+  }
+});
+
+/* ================= Video Card Generator ================= */
+function formatDate(iso) {
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+function createVideoCard(v, showActions = true) {
+  const card = document.createElement('div');
+  card.className = 'video-card';
+
+  const img = document.createElement('img');
+  img.className = 'thumb';
+  img.src = v.thumbnail || 'https://via.placeholder.com/240x140?text=No+Thumbnail';
+  img.alt = v.title;
+  card.appendChild(img);
+
+  const info = document.createElement('div');
+  info.className = 'info';
+
+  const badge = document.createElement('span');
+  badge.className = 'badge ' + (v.type === 'upload' ? 'badge-upload' : 'badge-embed');
+  badge.textContent = v.provider || (v.type === 'upload' ? 'Custom' : 'Embed');
+
+  const h3 = document.createElement('h3');
+  h3.textContent = v.title;
+
+  const meta = document.createElement('div');
+  meta.className = 'meta';
+  meta.innerHTML = `<span>${v.category}</span><span>${formatDate(v.createdAt)}</span>`;
+
+  info.appendChild(badge);
+  info.appendChild(h3);
+  info.appendChild(meta);
+
+  if (showActions) {
+    const actions = document.createElement('div');
+    actions.className = 'actions';
+
+    const previewBtn = document.createElement('button');
+    previewBtn.className = 'btn btn-success';
+    previewBtn.textContent = '▶ প্রিভিউ';
+    previewBtn.onclick = () => previewVideo(v);
+
+    const delBtn = document.createElement('button');
+    delBtn.className = 'btn btn-danger';
+    delBtn.textContent = '🗑 ডিলিট';
+    delBtn.onclick = () => deleteVideo(v.id);
+
+    actions.appendChild(previewBtn);
+    actions.appendChild(delBtn);
+    info.appendChild(actions);
+  }
+
+  card.appendChild(info);
+  return card;
+}
+
+/* ================= Preview Modal ================= */
+function previewVideo(v) {
+  const w = window.open('', '_blank', 'width=900,height=600');
+  const content = v.type === 'upload' || v.url.startsWith('data:video')
+    ? `<video src="${v.url}" controls autoplay style="width:100%;height:auto;background:#000;border-radius:8px"></video>`
+    : `<iframe src="${v.url}" allowfullscreen style="width:100%;height:450px;border:none;border-radius:8px"></iframe>`;
+
+  w.document.write(`
+    <!DOCTYPE html><html><head><title>${v.title}</title>
+    <style>
+      body{background:#0f172a;color:#e2e8f0;font-family:sans-serif;padding:20px;margin:0}
+      h1{font-size:20px;margin-bottom:10px;color:#38bdf8}
+      p{color:#94a3b8;margin-bottom:20px;font-size:14px}
+      .container{max-width:800px;margin:0 auto}
+    </style></head><body><div class="container">
+      <h1>${v.title}</h1>
+      <p>${v.desc || ''} • Provider: ${v.provider}</p>
+      ${content}
+    </div></body></html>
+  `);
+}
+
+/* ================= Delete Video ================= */
+function deleteVideo(id) {
+  if (!confirm('আপনি কি নিশ্চিত এই ভিডিওটি ডিলিট করতে চান?')) return;
+  videos = videos.filter(v => v.id !== id);
+  saveVideos(videos);
+  if (currentView === 'manage') renderManage();
+  if (currentView === 'dashboard') renderDashboard();
+  showToast('🗑 ভিডিও সফলভাবে ডিলিট হয়েছে');
+}
+
+/* ================= Dashboard Render ================= */
+function renderDashboard() {
+  const total = videos.length;
+  const up = videos.filter(v => v.type === 'upload').length;
+  const em = videos.filter(v => v.type === 'embed').length;
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statUpload').textContent = up;
+  document.getElementById('statEmbed').textContent = em;
+
+  const recent = document.getElementById('recentVideos');
+  recent.innerHTML = '';
+  const latest = videos.slice(0, 4);
+  if (latest.length === 0) {
+    recent.innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="big">🎬</div><p>এখনো কোনো ভিডিও যোগ করা হয়নি</p></div>`;
+  } else {
+    latest.forEach(v => recent.appendChild(createVideoCard(v, false)));
+  }
+}
+
+/* ================= Manage Render & Search ================= */
+function renderManage(filter = '') {
+  const list = document.getElementById('manageList');
+  list.innerHTML = '';
+  const q = filter.toLowerCase().trim();
+  const filtered = videos.filter(v =>
+    !q || v.title.toLowerCase().includes(q) || v.category.toLowerCase().includes(q) || v.provider.toLowerCase().includes(q)
+  );
+
+  if (filtered.length === 0) {
+    list.innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="big">🔍</div><p>কোনো ভিডিও পাওয়া যায়নি</p></div>`;
+    return;
+  }
+  filtered.forEach(v => list.appendChild(createVideoCard(v, true)));
+}
+
+document.getElementById('searchInput').addEventListener('input', e => {
+  renderManage(e.target.value);
+});
+
+/* ================= Init ================= */
+renderDashboard();
+switchView('dashboard');
+</script>
+</body>
+</html>
