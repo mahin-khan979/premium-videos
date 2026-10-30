@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CutePussy — Embed Manager</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#101114;color:#f4f5f7;font:14px Arial;padding:24px}main{max-width:850px;margin:auto}section{background:#202229;border:1px solid #30333b;padding:22px;border-radius:8px;margin:16px 0}
+h1 span{color:#e52b45}label{display:block;margin:12px 0 6px;color:#ddd}input,select{width:100%;padding:11px;background:#0f1013;border:1px solid #393c45;color:white;border-radius:4px}
+button{background:#e52b45;color:white;border:0;padding:10px 14px;border-radius:4px;cursor:pointer;margin-top:14px}button.secondary{background:#41434b}button.danger{background:#7d2635}
+small,.muted{color:#a6aab3;line-height:1.5}.item{border-top:1px solid #393c45;padding:13px 0;display:flex;justify-content:space-between;gap:12px;align-items:center}.item strong{display:block;margin-bottom:5px;overflow-wrap:anywhere}.notice{background:#342a17;border:1px solid #735b2b;padding:12px;border-radius:5px;color:#f1dfb6;line-height:1.5}
+a{color:white} .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:600px){.row{grid-template-columns:1fr}.item{align-items:flex-start;flex-direction:column}}
+</style></head><body><main>
+<h1>Cute<span>Pussy</span> — Embed Manager</h1>
+<p><a href="index.html">← Back to website</a></p>
+<div class="notice"><b>Prototype warning:</b> This page saves entries only in this browser's localStorage. It is not a real secure admin system and does not publish changes to other visitors. Before public launch, replace it with server-side authentication and a database. Add only videos you own or are explicitly authorized to embed. Confirm each provider's current terms and applicable laws.</div>
+<section><h2>Add an authorized external embed</h2>
+<form id="addForm">
+<label for="title">Video title</label><input id="title" maxlength="120" required placeholder="Enter an accurate title">
+<div class="row"><div><label for="provider">Provider</label><select id="provider"><option value="Pornhub">Pornhub</option><option value="xHamster">xHamster</option></select></div>
+<div><label for="category">Category</label><select id="category"><option value="latest">Latest</option><option value="top">Top Rated</option><option value="views">Most Viewed</option><option value="community">Community</option></select></div></div>
+<label for="url">Official HTTPS embed URL</label><input id="url" type="url" required placeholder="Paste the provider's official iframe src URL">
+<small>Paste the embed URL from the provider's Share / Embed option. This tool does not scrape, download, or convert watch-page links. Only HTTPS embed paths from pornhub.com, pornhub.org, or xhamster.com are accepted.</small>
+<br><button type="submit">Add video to this browser</button>
+</form><p id="msg" class="muted" aria-live="polite"></p></section>
+<section><h2>Saved in this browser</h2><div id="items" class="muted">No entries yet.</div></section>
+</main>
+<script>
+const KEY="cutepussy_embeds_v1";
+function read(){try{return JSON.parse(localStorage.getItem(KEY)||"[]")}catch(e){return []}}
+function valid(raw,provider){
+ try{const u=new URL(raw);if(u.protocol!=="https:"||!u.pathname.toLowerCase().includes("embed"))return false;const h=u.hostname.toLowerCase();
+ const ok=provider==="Pornhub"?["pornhub.com","pornhub.org"].some(d=>h===d||h.endsWith("."+d)):["xhamster.com"].some(d=>h===d||h.endsWith("."+d));
+ return ok;
+ }catch(e){return false}
+}
+function draw(){
+ const root=document.getElementById("items"),data=read();root.innerHTML="";
+ if(!data.length){root.textContent="No entries yet.";return}
+ data.forEach(v=>{
+  const row=document.createElement("div");row.className="item";
+  const info=document.createElement("div");const strong=document.createElement("strong");strong.textContent=v.title;const small=document.createElement("small");small.textContent=v.provider+" · "+v.category;info.append(strong,small);
+  const del=document.createElement("button");del.className="danger";del.textContent="Delete";del.onclick=()=>{localStorage.setItem(KEY,JSON.stringify(read().filter(x=>x.id!==v.id)));draw()};
+  row.append(info,del);root.append(row);
+ });
+}
+document.getElementById("addForm").addEventListener("submit",e=>{
+ e.preventDefault();const title=document.getElementById("title").value.trim(),provider=document.getElementById("provider").value,category=document.getElementById("category").value,url=document.getElementById("url").value.trim();
+ if(!title){return}
+ if(!valid(url,provider)){document.getElementById("msg").textContent="URL rejected. Use the official HTTPS embed URL for the selected provider.";return}
+ const data=read();data.unshift({id:Date.now().toString(36)+Math.random().toString(36).slice(2),title,provider,category,url});
+ localStorage.setItem(KEY,JSON.stringify(data));e.target.reset();document.getElementById("msg").textContent="Added to this browser. Open index.html in the same browser to preview.";draw();
+});
+draw();
+</script></body></html>
