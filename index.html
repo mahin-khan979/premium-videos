@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#101114">
+<title>CutePussy — Video Platform</title>
+<style>
+:root{--bg:#101114;--bar:#191b20;--panel:#202229;--line:#30333b;--muted:#a6aab3;--white:#f4f5f7;--red:#e52b45}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--white);font:14px Arial,Helvetica,sans-serif}
+a{color:inherit;text-decoration:none}header{background:var(--bar);border-bottom:1px solid var(--line)}
+.top{max-width:1240px;margin:auto;padding:13px 18px;display:flex;align-items:center;gap:22px}
+.brand{font-size:25px;font-weight:800;white-space:nowrap}.brand b{color:var(--red)}
+.search{flex:1;display:flex;min-width:120px}.search input{width:100%;background:#0f1013;border:1px solid #393c45;color:white;padding:11px;border-radius:4px 0 0 4px}.search button{background:var(--red);border:0;color:white;padding:0 17px;border-radius:0 4px 4px 0}
+.account{white-space:nowrap;color:#d5d6da}.account a{margin-left:12px}
+nav{background:#24262d}.navin{max-width:1240px;margin:auto;display:flex;overflow:auto;padding:0 10px}.navin a{padding:13px 15px;white-space:nowrap;color:#ddd}.navin a:hover,.navin a.active{background:var(--red)}
+main{max-width:1240px;margin:24px auto;padding:0 18px}
+.heading{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);margin-bottom:17px;padding-bottom:12px}.heading h1{font-size:21px;margin:0}.sort{color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px 14px}
+.card{min-width:0;cursor:pointer}.thumb{position:relative;aspect-ratio:16/9;background:linear-gradient(135deg,#34313a,#171a22 65%,#40202b);display:grid;place-items:center;border:1px solid #373943;color:#bfc1c8;font-size:12px;overflow:hidden}.thumb:before{content:"CUTEPUSSY";letter-spacing:2px;opacity:.65}
+.duration{position:absolute;right:6px;bottom:6px;background:#08090bcc;padding:3px 6px;border-radius:2px;font-size:11px}
+.quality{position:absolute;left:6px;top:6px;background:#d92843;padding:3px 5px;border-radius:2px;font-size:10px;font-weight:bold}
+.card h3{font-size:14px;line-height:1.35;margin:8px 0 5px;font-weight:600}.meta{color:var(--muted);font-size:11px}
+.pager{display:flex;justify-content:center;gap:7px;margin:30px 0}.pager button{background:var(--panel);border:1px solid var(--line);color:white;padding:8px 12px}
+footer{background:var(--bar);border-top:1px solid var(--line);padding:25px 18px;color:var(--muted);font-size:12px}.footin{max-width:1240px;margin:auto}
+#gate{position:fixed;inset:0;background:#000e;z-index:10;display:grid;place-items:center;padding:20px}.dialog{max-width:440px;background:#202229;border:1px solid #444;padding:25px;border-radius:8px;text-align:center}.dialog p{color:#c4c6cd;line-height:1.5}.dialog button{padding:11px 15px;border:0;border-radius:4px;margin:6px;cursor:pointer}.yes{background:var(--red);color:white}.no{background:#444;color:white}
+.player{display:none;background:#1b1d22;padding:15px;margin:18px 0;border:1px solid var(--line)}.player iframe{width:100%;aspect-ratio:16/9;background:#000;border:0}.player button{background:#393c45;color:white;border:0;padding:8px 12px;margin-bottom:10px}
+@media(max-width:900px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:620px){.top{flex-wrap:wrap;gap:12px}.brand{width:100%}.account{margin-left:auto}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 10px}main{padding:0 12px}}@media(max-width:360px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <div class="top">
+    <a class="brand" href="#">Cute<b>Pussy</b></a>
+    <form class="search" id="searchForm">
+      <input id="search" placeholder="Search videos..." aria-label="Search videos">
+      <button>Search</button>
+    </form>
+    <div class="account"><a href=""></a></div>
+  </div>
+  <nav>
+    <div class="navin">
+      <a href="#" data-filter="all" class="active">Categories</a>
+      <a href="#" data-filter="latest">Latest</a>
+      <a href="#" data-filter="top">Top Rated</a>
+      <a href="#" data-filter="views">Most Viewed</a>
+      <a href="#" data-filter="community">Community</a>
+    </div>
+  </nav>
+</header>
+
+<main>
+  <div class="heading">
+    <h1 id="heading">Latest Videos</h1>
+    <span class="sort">Embed library</span>
+  </div>
+  <section id="player" class="player">
+    <button id="close">Close player ✕</button>
+    <h2 id="playerTitle"></h2>
+    <div id="frame"></div>
+    <p id="providerNote" class="meta"></p>
+  </section>
+  <section class="grid" id="grid"></section>
+  <div class="pager">
+    <button>‹</button><button>1</button><button>2</button><button>3</button><button>Next ›</button>
+  </div>
+</main>
+
+<footer>
+  <div class="footin">
+    <b>18+ only.</b> This template is a front-end prototype. Use only lawful material you own or are expressly authorized to embed. Verify the provider's current embed terms, performer age and consent, rights, local laws and age-assurance requirements. Include reporting and takedown procedures.
+  </div>
+</footer>
+
+<div id="gate">
+  <div class="dialog">
+    <h2>Adults only — 18+</h2>
+    <p>Confirm you meet the age of majority where you live and that viewing this content is lawful in your location.</p>
+    <button class="yes" id="yes">I meet the age requirement</button>
+    <button class="no" id="no">Leave</button>
+    <p style="font-size:11px">This confirmation is not legally sufficient age verification where stronger checks are required.</p>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY="cutepussy_embeds_v1";
+const demoVideos=[
+ {id:"sample1",title:"Example listing — add an authorized embed in Admin",provider:"Example",url:"",category:"latest"},
+ {id:"sample2",title:"Embed library ready for your permitted links",provider:"Example",url:"",category:"top"}
+];
+function getVideos(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||"[]").filter(v=>v&&typeof v.title==="string"&&typeof v.url==="string")}catch(e){return []}}
+let filter="all";
+function render(){
+ const q=document.getElementById("search").value.trim().toLowerCase();
+ const videos=getVideos();
+ const rows=videos.filter(v=>(filter==="all"||v.category===filter)&&v.title.toLowerCase().includes(q));
+ const grid=document.getElementById("grid");grid.innerHTML="";
+ if(!rows.length){grid.textContent=videos.length?"No videos found.":"No videos have been added yet. Use the Admin page to add an authorized embed URL.";return}
+ rows.forEach(v=>{
+  const card=document.createElement("article");card.className="card";
+  const thumb=document.createElement("div");thumb.className="thumb";
+  const tag=document.createElement("span");tag.className="quality";tag.textContent=v.provider;
+  thumb.append(tag);
+  const title=document.createElement("h3");title.textContent=v.title;
+  const meta=document.createElement("div");meta.className="meta";meta.textContent="External embed · "+(v.category||"latest");
+  card.append(thumb,title,meta);card.addEventListener("click",()=>play(v));grid.append(card);
+ });
+}
+function play(v){
+ const frame=document.getElementById("frame");frame.innerHTML="";
+ const parsed=validateEmbed(v.url);
+ if(!parsed){alert("This embed URL is not from an approved provider host. Paste the provider's official embed URL.");return}
+ const iframe=document.createElement("iframe");iframe.src=parsed.href;iframe.allow="fullscreen; picture-in-picture";iframe.allowFullscreen=true;iframe.loading="lazy";iframe.referrerPolicy="strict-origin-when-cross-origin";frame.append(iframe);
+ document.getElementById("playerTitle").textContent=v.title;
+ document.getElementById("providerNote").textContent="Provider: "+v.provider+" · External player supplied by the provider.";
+ document.getElementById("player").style.display="block";window.scrollTo({top:0,behavior:"smooth"});
+}
+function validateEmbed(value){
+ try{
+  const u=new URL(value);
+  if(u.protocol!=="https:")return null;
+  const host=u.hostname.toLowerCase();
+  const allowed=["pornhub.com","pornhub.org","xhamster.com"];
+  if(!allowed.some(d=>host===d||host.endsWith("."+d)))return null;
+  if(!u.pathname.toLowerCase().includes("embed"))return null;
+  return u;
+ }catch(e){return null}
+}
+document.getElementById("searchForm").addEventListener("submit",e=>{e.preventDefault();render()});
+document.getElementById("search").addEventListener("input",render);
+document.querySelectorAll("[data-filter]").forEach(a=>a.addEventListener("click",e=>{e.preventDefault();document.querySelectorAll("[data-filter]").forEach(x=>x.classList.remove("active"));a.classList.add("active");filter=a.dataset.filter;document.getElementById("heading").textContent=a.textContent==="Categories"?"Latest Videos":a.textContent;render()}));
+document.getElementById("close").onclick=()=>{document.getElementById("player").style.display="none";document.getElementById("frame").innerHTML=""};
+document.getElementById("yes").onclick=()=>{sessionStorage.setItem("adult-confirmed","1");document.getElementById("gate").remove()};
+document.getElementById("no").onclick=()=>location.replace("about:blank");
+if(sessionStorage.getItem("adult-confirmed")==="1")document.getElementById("gate").remove();
+render();
+</script>
+</body>
+</html>
